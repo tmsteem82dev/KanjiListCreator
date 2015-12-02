@@ -22,6 +22,9 @@ namespace KanjiListCreator
 
         private const string JLPT5 = "http://www.tanos.co.uk/jlpt/jlpt5/vocab/";
         private const string JLPT4 = "http://www.tanos.co.uk/jlpt/jlpt4/vocab/";
+        private const string JLPT3 = "http://www.tanos.co.uk/jlpt/jlpt3/vocab/";
+        private const string JLPT2 = "http://www.tanos.co.uk/jlpt/jlpt2/vocab/";
+        private const string JLPT1 = "http://www.tanos.co.uk/jlpt/jlpt1/vocab/";
 
         public Main()
         {
@@ -45,9 +48,7 @@ namespace KanjiListCreator
             JObject searchResult = JObject.Parse(json);
 
             IList<JToken> results = searchResult["data"].Children().ToList();
-
-            //List<Kanji> kanList = searchResult["data"].Serial
-            int limiter = 0;
+                        
 
             if(File.Exists("test.txt"))
             {
@@ -61,14 +62,7 @@ namespace KanjiListCreator
                 using (StreamWriter w = File.AppendText("test.txt"))
                 {
                     w.WriteLine(String.Format("{0}, {1}",testkan.My_Japanese[0].Word, testkan.My_Japanese[0].Reading));
-                }
-
-                    limiter++;
-
-                if(limiter > 100)
-                {
-                    break;
-                }
+                }                           
             }
 
             //foreach( JObject content in searchResult["data"].Children<JObject>())
