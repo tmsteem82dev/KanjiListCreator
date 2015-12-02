@@ -31,9 +31,7 @@
             this.btnData = new System.Windows.Forms.Button();
             this.lvwData = new System.Windows.Forms.ListView();
             this.btnScrape = new System.Windows.Forms.Button();
-            this.btnSave = new System.Windows.Forms.Button();
             this.saveKanjiDialog = new System.Windows.Forms.SaveFileDialog();
-            this.btnLoad = new System.Windows.Forms.Button();
             this.openKanjiDialog = new System.Windows.Forms.OpenFileDialog();
             this.chkJLPT1 = new System.Windows.Forms.CheckBox();
             this.chkJLPT2 = new System.Windows.Forms.CheckBox();
@@ -43,6 +41,12 @@
             this.lblGetData = new System.Windows.Forms.Label();
             this.lblKanjiCount = new System.Windows.Forms.Label();
             this.lblSelectedKanjiCount = new System.Windows.Forms.Label();
+            this.btnProcessAll = new System.Windows.Forms.Button();
+            this.folderKanjiDialog = new System.Windows.Forms.FolderBrowserDialog();
+            this.btnLoadFromJson = new System.Windows.Forms.Button();
+            this.btnAddFromJson = new System.Windows.Forms.Button();
+            this.btnSaveToJson = new System.Windows.Forms.Button();
+            this.btnClear = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnData
@@ -61,12 +65,14 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.lvwData.CheckBoxes = true;
+            this.lvwData.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lvwData.Location = new System.Drawing.Point(143, 12);
             this.lvwData.Name = "lvwData";
             this.lvwData.Size = new System.Drawing.Size(553, 491);
             this.lvwData.TabIndex = 1;
             this.lvwData.UseCompatibleStateImageBehavior = false;
             this.lvwData.View = System.Windows.Forms.View.Details;
+            this.lvwData.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.lvwData_ItemChecked);
             // 
             // btnScrape
             // 
@@ -77,26 +83,6 @@
             this.btnScrape.Text = "Scrape";
             this.btnScrape.UseVisualStyleBackColor = true;
             this.btnScrape.Click += new System.EventHandler(this.btnScrape_Click);
-            // 
-            // btnSave
-            // 
-            this.btnSave.Location = new System.Drawing.Point(14, 254);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(75, 23);
-            this.btnSave.TabIndex = 3;
-            this.btnSave.Text = "Save...";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-            // 
-            // btnLoad
-            // 
-            this.btnLoad.Location = new System.Drawing.Point(13, 284);
-            this.btnLoad.Name = "btnLoad";
-            this.btnLoad.Size = new System.Drawing.Size(75, 23);
-            this.btnLoad.TabIndex = 4;
-            this.btnLoad.Text = "Load...";
-            this.btnLoad.UseVisualStyleBackColor = true;
-            this.btnLoad.Click += new System.EventHandler(this.btnLoad_Click);
             // 
             // openKanjiDialog
             // 
@@ -163,6 +149,7 @@
             // 
             // lblKanjiCount
             // 
+            this.lblKanjiCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblKanjiCount.AutoSize = true;
             this.lblKanjiCount.Location = new System.Drawing.Point(143, 510);
             this.lblKanjiCount.Name = "lblKanjiCount";
@@ -172,6 +159,7 @@
             // 
             // lblSelectedKanjiCount
             // 
+            this.lblSelectedKanjiCount.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblSelectedKanjiCount.AutoSize = true;
             this.lblSelectedKanjiCount.Location = new System.Drawing.Point(143, 527);
             this.lblSelectedKanjiCount.Name = "lblSelectedKanjiCount";
@@ -179,11 +167,66 @@
             this.lblSelectedKanjiCount.TabIndex = 12;
             this.lblSelectedKanjiCount.Text = "Selected kanji count: 0";
             // 
+            // btnProcessAll
+            // 
+            this.btnProcessAll.Location = new System.Drawing.Point(12, 196);
+            this.btnProcessAll.Name = "btnProcessAll";
+            this.btnProcessAll.Size = new System.Drawing.Size(75, 23);
+            this.btnProcessAll.TabIndex = 13;
+            this.btnProcessAll.Text = "ProcessAll";
+            this.btnProcessAll.UseVisualStyleBackColor = true;
+            this.btnProcessAll.Click += new System.EventHandler(this.btnProcessAll_Click);
+            // 
+            // btnLoadFromJson
+            // 
+            this.btnLoadFromJson.Location = new System.Drawing.Point(14, 314);
+            this.btnLoadFromJson.Name = "btnLoadFromJson";
+            this.btnLoadFromJson.Size = new System.Drawing.Size(104, 23);
+            this.btnLoadFromJson.TabIndex = 14;
+            this.btnLoadFromJson.Text = "Load from Json...";
+            this.btnLoadFromJson.UseVisualStyleBackColor = true;
+            this.btnLoadFromJson.Click += new System.EventHandler(this.btnLoadFromJson_Click);
+            // 
+            // btnAddFromJson
+            // 
+            this.btnAddFromJson.Location = new System.Drawing.Point(16, 285);
+            this.btnAddFromJson.Name = "btnAddFromJson";
+            this.btnAddFromJson.Size = new System.Drawing.Size(102, 23);
+            this.btnAddFromJson.TabIndex = 15;
+            this.btnAddFromJson.Text = "Add from Json...";
+            this.btnAddFromJson.UseVisualStyleBackColor = true;
+            this.btnAddFromJson.Click += new System.EventHandler(this.btnAddFromJson_Click);
+            // 
+            // btnSaveToJson
+            // 
+            this.btnSaveToJson.Location = new System.Drawing.Point(16, 246);
+            this.btnSaveToJson.Name = "btnSaveToJson";
+            this.btnSaveToJson.Size = new System.Drawing.Size(102, 23);
+            this.btnSaveToJson.TabIndex = 16;
+            this.btnSaveToJson.Text = "Save to Json...";
+            this.btnSaveToJson.UseVisualStyleBackColor = true;
+            this.btnSaveToJson.Click += new System.EventHandler(this.btnSaveToJson_Click);
+            // 
+            // btnClear
+            // 
+            this.btnClear.Location = new System.Drawing.Point(16, 362);
+            this.btnClear.Name = "btnClear";
+            this.btnClear.Size = new System.Drawing.Size(102, 23);
+            this.btnClear.TabIndex = 17;
+            this.btnClear.Text = "Clear List";
+            this.btnClear.UseVisualStyleBackColor = true;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(708, 547);
+            this.Controls.Add(this.btnClear);
+            this.Controls.Add(this.btnSaveToJson);
+            this.Controls.Add(this.btnAddFromJson);
+            this.Controls.Add(this.btnLoadFromJson);
+            this.Controls.Add(this.btnProcessAll);
             this.Controls.Add(this.lblSelectedKanjiCount);
             this.Controls.Add(this.lblKanjiCount);
             this.Controls.Add(this.lblGetData);
@@ -192,8 +235,6 @@
             this.Controls.Add(this.chkJLPT3);
             this.Controls.Add(this.chkJLPT2);
             this.Controls.Add(this.chkJLPT1);
-            this.Controls.Add(this.btnLoad);
-            this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnScrape);
             this.Controls.Add(this.lvwData);
             this.Controls.Add(this.btnData);
@@ -209,9 +250,7 @@
         private System.Windows.Forms.Button btnData;
         private System.Windows.Forms.ListView lvwData;
         private System.Windows.Forms.Button btnScrape;
-        private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.SaveFileDialog saveKanjiDialog;
-        private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.OpenFileDialog openKanjiDialog;
         private System.Windows.Forms.CheckBox chkJLPT1;
         private System.Windows.Forms.CheckBox chkJLPT2;
@@ -221,6 +260,12 @@
         private System.Windows.Forms.Label lblGetData;
         private System.Windows.Forms.Label lblKanjiCount;
         private System.Windows.Forms.Label lblSelectedKanjiCount;
+        private System.Windows.Forms.Button btnProcessAll;
+        private System.Windows.Forms.FolderBrowserDialog folderKanjiDialog;
+        private System.Windows.Forms.Button btnLoadFromJson;
+        private System.Windows.Forms.Button btnAddFromJson;
+        private System.Windows.Forms.Button btnSaveToJson;
+        private System.Windows.Forms.Button btnClear;
     }
 }
 

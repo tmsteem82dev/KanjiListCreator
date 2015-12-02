@@ -1,4 +1,5 @@
 ﻿using KanjiListCreator.Data;
+using KanjiListCreator.Scraping;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -33,6 +34,8 @@ namespace KanjiListCreator
             lvwData.Columns.Add("Kanji");
             lvwData.Columns.Add("Reading");
             lvwData.Columns.Add("Meaning");
+            lvwData.Columns.Add("JLPT Level");
+
 
         }
 
@@ -118,154 +121,228 @@ namespace KanjiListCreator
 
         private void btnScrape_Click(object sender, EventArgs e)
         {
-            WebRequest request = WebRequest.Create("http://www.tanos.co.uk/jlpt/jlpt5/vocab/");
+            
+            Scraper myScraper = new Scraper();
 
-            WebResponse response = request.GetResponse();
+            string htmlBody = myScraper.GetHtmlFromUrl(JLPT5);
 
-            StreamReader reader = new StreamReader(response.GetResponseStream());
+            myKanjiList = myScraper.GetKanjiFromPage(htmlBody, "jlpt5");
 
-            string htmlBody = reader.ReadToEnd();
 
-           myKanjiList =  new List<ScrapedKanji>();
+            
 
-            string[] grabTable = htmlBody.Split(new string[] { "<th>Kanji</th>" }, StringSplitOptions.RemoveEmptyEntries);
-            string[] splitRows = grabTable[1].Split(new string[] { "<tr><td>" }, StringSplitOptions.RemoveEmptyEntries);
-            foreach(string row in splitRows)
+            //KanjiListToListView(myKanjiList);
+            
+        }
+
+        private void AddKanjiToListView(List<ScrapedKanji> kanjiList, ListView listy)
+        {
+            foreach (ScrapedKanji scrappy in kanjiList)
             {
-                List<string> attributes = new List<string>();
-                if(row.Substring(0,5).Equals("</td>"))
-                {
-                    attributes.Add("");
+                ListViewItem itm = listy.Items.Add(scrappy.Word);
+                
+                itm.SubItems.Add(scrappy.Reading);
+                itm.SubItems.Add(scrappy.Meaning);
+                itm.SubItems.Add(scrappy.JLPT_Level);
+                itm.Checked = scrappy.Selected;
+                itm.Tag = scrappy;
+                if (itm.Checked)
+                {                    
+                    itm.BackColor = Color.Green;
                 }
-
-                if (row.Contains("<td>"))
+                else
                 {
-                    string[] splitColumns = row.Split(new string[] { "</td>" }, StringSplitOptions.RemoveEmptyEntries);
-
-                    
-                    foreach(string splitColumn in splitColumns)
-                    {
-                        string column = splitColumn;
-                        string value = "";
-                        int tag = 0;
-                        if(column.Contains("<td>"))
-                        {
-                            tag = column.IndexOf('>');
-                            column = column.Substring(tag + 1);
-                        }
-
-                        tag = column.IndexOf('>');
-                        if (tag > 0)
-                        {
-                            column = column.Substring(tag + 1);
-                            tag = column.IndexOf('<');
-                            if (tag > 0)
-                            {
-                                value = column.Substring(0, tag);
-                                attributes.Add(value);
-                            }
-
-                        }
-
-                        
-                    }
-
-                    if(attributes.Count > 0)
-                    {
-                        if(attributes[0].Equals(""))
-                        {
-                            myKanjiList.Add(new ScrapedKanji { Word = attributes[1], Reading = attributes[1], Meaning= attributes[2] });
-                        }
-                        else
-                        {
-                            myKanjiList.Add(new ScrapedKanji { Word = attributes[0], Reading = attributes[1], Meaning = attributes[2] });
-                        }
-
-                    }
-
+                    itm.BackColor = Color.Red;
                 }
             }
-
-            KanjiListToListView(myKanjiList);
-            
         }
 
         private void KanjiListToListView(List<ScrapedKanji> kanjiList)
         {
             lvwData.Items.Clear();
 
-            foreach (ScrapedKanji scrappy in kanjiList)
-            {
-                ListViewItem itm = lvwData.Items.Add(scrappy.Word);
-                itm.Checked = true;
-                itm.SubItems.Add(scrappy.Reading);
-                itm.SubItems.Add(scrappy.Meaning);
-            }
+            AddKanjiToListView(kanjiList, lvwData);
 
             lvwData.Columns[0].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
             lvwData.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
             lvwData.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
         }
 
-        private void btnSave_Click(object sender, EventArgs e)
+        private void SaveKanjiToDisk(List<ScrapedKanji> kanjiList, string filename)
         {
-            saveKanjiDialog.Filter = "Text file|*.txt";
-            saveKanjiDialog.Title = "Save kanji you want to learn";
-            DialogResult res= saveKanjiDialog.ShowDialog();
-
-            if (res != DialogResult.Cancel && saveKanjiDialog.FileName != "")
+            if (File.Exists(filename))
             {
-                if(File.Exists(saveKanjiDialog.FileName))
-                {
-                    File.Delete(saveKanjiDialog.FileName);
+                File.Delete(filename);
 
-                }
+            }
 
-                foreach (ListViewItem itm in lvwData.Items)
+            foreach (ScrapedKanji kanji in kanjiList)
+            {
+                using (StreamWriter w = File.AppendText(filename))
                 {
-                    if (itm.Checked)
-                    {
-                        ScrapedKanji kanji = myKanjiList[itm.Index];
-                        using (StreamWriter w = File.AppendText(saveKanjiDialog.FileName))
-                        {
-                            w.WriteLine(String.Format("{0},{1},{2}", kanji.Word, kanji.Reading, kanji.Meaning));
-                        }
-                    }
+                    w.WriteLine(String.Format("{0},{1},{2}", kanji.Word, kanji.Reading, kanji.Meaning));
                 }
+            }
+        }
+
+        private void SaveKanjiJsonToDisk(List<ScrapedKanji> kanjiList, string filename)
+        {
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+
+            }
+
+            var json = JsonConvert.SerializeObject(kanjiList);
+
+            File.AppendAllText(filename, json);
+        }
+
+
+
+           
+
+        private void btnProcessAll_Click(object sender, EventArgs e)
+        {
+            Scraper myScraper = new Scraper();
+            List<ScrapedKanji> kanjiList = new List<ScrapedKanji>();
+            string htmlBody = "";
+
+            folderKanjiDialog.ShowNewFolderButton = true;
+            if (folderKanjiDialog.ShowDialog() != DialogResult.Cancel)
+            {
+                string path = folderKanjiDialog.SelectedPath;
+                htmlBody = myScraper.GetHtmlFromUrl(JLPT5);
+                kanjiList = myScraper.GetKanjiFromPage(htmlBody, "jlpt5");
+                SaveKanjiJsonToDisk(kanjiList, path + "\\jlpt5.json");
+
+                htmlBody = myScraper.GetHtmlFromUrl(JLPT4);
+                kanjiList = myScraper.GetKanjiFromPage(htmlBody, "jlpt4");
+                SaveKanjiJsonToDisk(kanjiList, path + "\\jlpt4.json");
+
+                htmlBody = myScraper.GetHtmlFromUrl(JLPT3);
+                kanjiList = myScraper.GetKanjiFromPage(htmlBody, "jlpt3");
+                SaveKanjiJsonToDisk(kanjiList, path + "\\jlpt3.json");
+
+                htmlBody = myScraper.GetHtmlFromUrl(JLPT2);
+                kanjiList = myScraper.GetKanjiFromPage(htmlBody, "jlpt2");
+                SaveKanjiJsonToDisk(kanjiList, path + "\\jlpt2.json");
+
+                htmlBody = myScraper.GetHtmlFromUrl(JLPT1);
+                kanjiList = myScraper.GetKanjiFromPage(htmlBody, "jlpt1");
+                SaveKanjiJsonToDisk(kanjiList, path + "\\jlpt1.json");
             }
 
         }
 
-        private void btnLoad_Click(object sender, EventArgs e)
+        private void btnLoadFromJson_Click(object sender, EventArgs e)
         {
-            openKanjiDialog.Filter = "Text file|*.txt";
+            openKanjiDialog.Filter = "Text file|*.json";
+            openKanjiDialog.Title = "Load kanji you want to learn";
+            DialogResult res = openKanjiDialog.ShowDialog();
+            
+            if (res != DialogResult.Cancel && openKanjiDialog.FileName != "")
+            {
+                StreamReader r = new StreamReader(openKanjiDialog.FileName);
+
+                string json = r.ReadToEnd();
+
+                List<ScrapedKanji> kanjiList = JArray.Parse(json).ToObject<List<ScrapedKanji>>();
+                if (kanjiList.Count > 0)
+                {
+                    lblKanjiCount.Text = String.Format("Kanji count: {0}", kanjiList.Count);
+                    lvwData.Items.Clear();
+                    AddKanjiToListView(kanjiList, lvwData);
+                    int selectedItemCount = 0;
+                    foreach(ListViewItem itm in lvwData.Items)
+                    {
+                        if(itm.Checked)
+                        {
+                            selectedItemCount++;
+                        }
+                    }
+
+                    lblSelectedKanjiCount.Text = String.Format("Selected kanji count: {0}", selectedItemCount);
+
+                    lvwData.Columns[0].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    lvwData.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    lvwData.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    lvwData.Columns[3].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+
+                    lvwData.Focus();
+                }
+
+                r.Close();
+            }
+        }
+
+        private void lvwData_ItemChecked(object sender, ItemCheckedEventArgs e)
+        {
+            if(e.Item.Checked)
+            {
+                e.Item.BackColor = Color.Green;
+            }
+            else
+            {
+                e.Item.BackColor = Color.Red;
+            }
+        }
+
+        private void btnAddFromJson_Click(object sender, EventArgs e)
+        {
+            openKanjiDialog.Filter = "Json file|*.json";
             openKanjiDialog.Title = "Load kanji you want to learn";
             DialogResult res = openKanjiDialog.ShowDialog();
 
             if (res != DialogResult.Cancel && openKanjiDialog.FileName != "")
             {
-                myKanjiList = new List<ScrapedKanji>();
-                using (StreamReader r = new StreamReader(openKanjiDialog.FileName))
-                {
-                    while(true)
-                    {
-                        string line = r.ReadLine();
-                        if(line == null)
-                        {
-                            break;
-                        }
+                StreamReader r = new StreamReader(openKanjiDialog.FileName);
 
-                        string[] splitLine = line.Split(',');
-                        myKanjiList.Add(new ScrapedKanji { Word = splitLine[0], Reading = splitLine[1], Meaning = splitLine[2] });
+                string json = r.ReadToEnd();
 
-                    }
+                List<ScrapedKanji> kanjiList = JArray.Parse(json).ToObject<List<ScrapedKanji>>();
+                if (kanjiList.Count > 0)
+                {   
+                    AddKanjiToListView(kanjiList, lvwData);
+                    lblKanjiCount.Text = String.Format("Kanji count {0}", lvwData.Items.Count);
+                    lvwData.Columns[0].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    lvwData.Columns[1].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    lvwData.Columns[2].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
+                    lvwData.Columns[3].AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
                 }
             }
+        }
 
-            if(myKanjiList.Count > 0)
+        private void btnSaveToJson_Click(object sender, EventArgs e)
+        {
+            List<ScrapedKanji> kanjiScrapes = new List<ScrapedKanji>();
+            foreach(ListViewItem itm in lvwData.Items)
             {
-                KanjiListToListView(myKanjiList);
+                ScrapedKanji kanji = new ScrapedKanji();
+
+                kanji = (ScrapedKanji)itm.Tag;
+                kanji.Selected = itm.Checked;
+
+                kanjiScrapes.Add(kanji);
             }
+
+            if(kanjiScrapes.Count > 0)
+            {
+                saveKanjiDialog.Filter = "Json file|*.json";
+                saveKanjiDialog.Title = "Save data to Json file";
+
+                DialogResult res = saveKanjiDialog.ShowDialog();
+                string filename = saveKanjiDialog.FileName;
+                if(res != DialogResult.Cancel && res != DialogResult.Abort && filename != "")
+                {
+                    SaveKanjiJsonToDisk(kanjiScrapes, filename);
+                }
+            }
+        }
+
+        private void btnClear_Click(object sender, EventArgs e)
+        {
+            lvwData.Items.Clear();
         }
     }
 }

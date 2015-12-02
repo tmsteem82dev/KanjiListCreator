@@ -12,5 +12,8 @@ namespace KanjiListCreator.Data
         public string Reading { get; set; }
         public string Meaning { get; set; }
 
+        public bool Selected { get; set; }
+        public string JLPT_Level { get; set; }
+
     }
 }
