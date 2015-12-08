@@ -47,6 +47,7 @@
             this.btnAddFromJson = new System.Windows.Forms.Button();
             this.btnSaveToJson = new System.Windows.Forms.Button();
             this.btnClear = new System.Windows.Forms.Button();
+            this.btnTrySort = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnData
@@ -217,11 +218,22 @@
             this.btnClear.UseVisualStyleBackColor = true;
             this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
+            // btnTrySort
+            // 
+            this.btnTrySort.Location = new System.Drawing.Point(16, 470);
+            this.btnTrySort.Name = "btnTrySort";
+            this.btnTrySort.Size = new System.Drawing.Size(75, 23);
+            this.btnTrySort.TabIndex = 18;
+            this.btnTrySort.Text = "Sort";
+            this.btnTrySort.UseVisualStyleBackColor = true;
+            this.btnTrySort.Click += new System.EventHandler(this.btnTrySort_Click);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(708, 547);
+            this.Controls.Add(this.btnTrySort);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.btnSaveToJson);
             this.Controls.Add(this.btnAddFromJson);
@@ -266,6 +278,7 @@
         private System.Windows.Forms.Button btnAddFromJson;
         private System.Windows.Forms.Button btnSaveToJson;
         private System.Windows.Forms.Button btnClear;
+        private System.Windows.Forms.Button btnTrySort;
     }
 }
 

@@ -344,5 +344,135 @@ namespace KanjiListCreator
         {
             lvwData.Items.Clear();
         }
+
+        private void btnTrySort_Click(object sender, EventArgs e)
+        {
+            folderKanjiDialog.ShowNewFolderButton = true;
+            DialogResult dr = folderKanjiDialog.ShowDialog();
+
+            if(dr == DialogResult.Abort || dr == DialogResult.Cancel)
+            {
+                return;
+            }
+
+            string path;
+            if((path = folderKanjiDialog.SelectedPath) == "")
+            {
+                return;
+            }
+
+            List<ScrapedKanji> availableKanjiList = new List<ScrapedKanji>();
+            KanjiSortedList kanjiEndList = new KanjiSortedList();
+
+
+
+            foreach(ListViewItem itm in lvwData.Items)
+            {
+                if(itm.Tag != null)
+                {
+                    ScrapedKanji kanji = (ScrapedKanji)itm.Tag;
+                    if (kanji.Selected)
+                    {
+                        availableKanjiList.Add(kanji);
+                    }
+                }
+            }
+
+            int count = 0;
+
+            KanjiListRow kanjiRow = new KanjiListRow();
+            kanjiRow.MaxColumnCount = 6;
+            do
+            {
+                ScrapedKanji firstSibling = availableKanjiList[0];
+
+                availableKanjiList.Remove(firstSibling);
+
+                List<KanjiCompatibilityRating> ratedKanji = new List<KanjiCompatibilityRating>();
+
+                foreach(ScrapedKanji kanjiCandidate in availableKanjiList)
+                {
+                    int candidateScore = 0;
+
+                    if(kanjiCandidate.Word.Contains(firstSibling.Word))
+                    {
+                        candidateScore += 4;
+                    }
+
+                    if(kanjiCandidate.Word.Contains(firstSibling.Word[0]))
+                    {
+                        candidateScore += 4;
+
+                        foreach (char moji in firstSibling.Word)
+                        {
+                            if (kanjiCandidate.Word.Contains(moji))
+                            {                   
+                                candidateScore++;                         
+                            }
+                        }
+                    }
+                    
+                    ratedKanji.Add(new KanjiCompatibilityRating { Score = candidateScore, MyKanji = kanjiCandidate });
+                }
+
+
+                ratedKanji = ratedKanji.OrderByDescending(mykanji => mykanji.Score).ToList<KanjiCompatibilityRating>();
+
+
+                kanjiRow = AddToListRow(firstSibling, kanjiRow, kanjiEndList);
+
+                foreach (KanjiCompatibilityRating rk in ratedKanji)
+                {
+                    if(rk.Score ==0)
+                    {
+                        break;
+                    }
+
+                    kanjiRow = AddToListRow(rk.MyKanji, kanjiRow, kanjiEndList);
+                    availableKanjiList.Remove(rk.MyKanji);
+                }
+
+                if(kanjiEndList.MyContent.Count > 30)
+                {
+                    WriteSortedListToCSV(kanjiEndList, path);
+                    break;
+                }
+                
+
+            }
+            while (availableKanjiList.Count > 0);
+        }
+
+        private void WriteSortedListToCSV(KanjiSortedList kanjiSortedList, string path)
+        {
+            using (StreamWriter sw = new StreamWriter(String.Format("{0}\\myfirstkanji.csv", path),false,Encoding.Unicode))
+            {
+                foreach (KanjiListRow row in kanjiSortedList.MyContent)
+                {
+                    string line="";
+                    foreach(ScrapedKanji kanji in row.GetColumns())
+                    {
+                        line += kanji.Word + ",";
+                    }
+
+                    line = line.Substring(0, line.Length - 1);
+                    sw.WriteLine(line);
+                }
+            }
+        }
+
+        private KanjiListRow AddToListRow(ScrapedKanji kanji, KanjiListRow currentRow, KanjiSortedList kanjiEndList)
+        {
+            KanjiListRow currCopy = currentRow;
+            if (!currCopy.AddKanjiToRow(kanji))
+            {
+                kanjiEndList.MyContent.Add(currCopy);
+                currCopy = new KanjiListRow();
+                currCopy.MaxColumnCount = 6;
+                currCopy.AddKanjiToRow(kanji);
+            }
+
+            return currCopy;
+        }
     }
 }
