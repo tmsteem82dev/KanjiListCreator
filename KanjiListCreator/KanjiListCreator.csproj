@@ -52,6 +52,9 @@
   <ItemGroup>
     <Compile Include="Data\Japanese.cs" />
     <Compile Include="Data\Kanji.cs" />
+    <Compile Include="Data\KanjiCompatibilityRating.cs" />
+    <Compile Include="Data\KanjiListRow.cs" />
+    <Compile Include="Data\KanjiSortedList.cs" />
     <Compile Include="Data\ScrapedKanji.cs" />
     <Compile Include="Data\Senses.cs" />
     <Compile Include="Main.cs">
