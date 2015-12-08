@@ -382,12 +382,20 @@ namespace KanjiListCreator
 
             KanjiListRow kanjiRow = new KanjiListRow();
             kanjiRow.MaxColumnCount = 6;
+            string validateHiragana = "あいうえおかきくけこさしすせそはひふへほたちつてとらりるれろやゆまみむめもなにぬねのじがぎぐげごばびぶべぼだぢづでど";
+
             do
             {
                 ScrapedKanji firstSibling = availableKanjiList[0];
+                bool firstIsKanji = true;
 
-                availableKanjiList.Remove(firstSibling);
+                if(validateHiragana.Contains(firstSibling.Word[0]))
+                {
+                    firstIsKanji = false;
+                }            
 
+                //availableKanjiList.Remove(firstSibling);
+                availableKanjiList.RemoveAll(removeKanji => removeKanji.Word.Equals(firstSibling.Word, StringComparison.InvariantCultureIgnoreCase));
                 List<KanjiCompatibilityRating> ratedKanji = new List<KanjiCompatibilityRating>();
 
                 foreach(ScrapedKanji kanjiCandidate in availableKanjiList)
@@ -396,18 +404,38 @@ namespace KanjiListCreator
 
                     if(kanjiCandidate.Word.Contains(firstSibling.Word))
                     {
-                        candidateScore += 4;
+                        candidateScore += 10;
                     }
 
                     if(kanjiCandidate.Word.Contains(firstSibling.Word[0]))
                     {
-                        candidateScore += 4;
 
-                        foreach (char moji in firstSibling.Word)
+                        if (firstIsKanji)
                         {
-                            if (kanjiCandidate.Word.Contains(moji))
-                            {                   
-                                candidateScore++;                         
+                            candidateScore += 10;
+                        }
+
+                        if(kanjiCandidate.Word[0] == firstSibling.Word[0])
+                        {
+                            candidateScore += 10;
+                        }
+
+                        if (!firstIsKanji)
+                        {
+                            if (kanjiCandidate.Word[0] != firstSibling.Word[0])
+                            {
+                                candidateScore = 0;
+                            }
+                        }
+
+                        if (candidateScore != 0)
+                        {
+                            foreach (char moji in firstSibling.Word)
+                            {
+                                if (kanjiCandidate.Word.Contains(moji))
+                                {
+                                    candidateScore++;
+                                }
                             }
                         }
                     }
@@ -421,15 +449,27 @@ namespace KanjiListCreator
 
                 kanjiRow = AddToListRow(firstSibling, kanjiRow, kanjiEndList);
 
-                foreach (KanjiCompatibilityRating rk in ratedKanji)
+                //foreach (KanjiCompatibilityRating rk in ratedKanji)
+                
+                while(ratedKanji.Count > 0)
                 {
-                    if(rk.Score ==0)
+                    KanjiCompatibilityRating rk = ratedKanji[0];
+
+                    if (rk.MyKanji.Word.Equals("素早い", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        Console.WriteLine("Found!");
+                    }
+
+                    if (rk.Score ==0)
                     {
                         break;
                     }
 
                     kanjiRow = AddToListRow(rk.MyKanji, kanjiRow, kanjiEndList);
-                    availableKanjiList.Remove(rk.MyKanji);
+                    //availableKanjiList.Remo availableKanjiList.Where(rvk => rvk.Word.Equals(rk.MyKanji.Word)).ToList();
+                    //availableKanjiList.Remove(rk.MyKanji);
+                    ratedKanji.RemoveAll(removeKanji => removeKanji.MyKanji.Word.Equals(rk.MyKanji.Word, StringComparison.InvariantCultureIgnoreCase));
+                    availableKanjiList.RemoveAll(removeKanji => removeKanji.Word.Equals(rk.MyKanji.Word, StringComparison.InvariantCultureIgnoreCase));
                 }
 
                 if(kanjiEndList.MyContent.Count > 30)
