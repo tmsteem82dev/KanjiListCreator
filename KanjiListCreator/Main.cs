@@ -472,15 +472,17 @@ namespace KanjiListCreator
                     availableKanjiList.RemoveAll(removeKanji => removeKanji.Word.Equals(rk.MyKanji.Word, StringComparison.InvariantCultureIgnoreCase));
                 }
 
-                if(kanjiEndList.MyContent.Count > 30)
-                {
-                    WriteSortedListToCSV(kanjiEndList, path);
-                    break;
-                }
+                //if(kanjiEndList.MyContent.Count > 30)
+                //{
+                //    WriteSortedListToCSV(kanjiEndList, path);
+                //    break;
+                //}
                 
 
             }
             while (availableKanjiList.Count > 0);
+
+            WriteSortedListToCSV(kanjiEndList, path);
         }
 
         private void WriteSortedListToCSV(KanjiSortedList kanjiSortedList, string path)
